@@ -35,14 +35,15 @@ func (this *Map) M(key string, value interface{}, operators ...Operator) Map {
 }
 
 func (this *Map) handleWithoutOperator(key string, value interface{}) {
-	//update directly
+	//todo: handle the case of old value is slice
 	this[key] = value
 }
 
 func (this *Map) handleWithOperator(string key, newOne interface{}, op Operator) {
 	if old, ok := this[key]; ok {
-		if mapValue, isMap := Map(old); isMap {
+		if mapValue, isMap := old.(Map); isMap {
 			mapValue[string(op)] = newOne
+			this[key] = mapValue
 		} else if isSliceOld, oldValue := isSlice(old); isSliceOld {
 			if isSliceNew, newValue := isSlice(newOne); isSliceNew {
 				old[key] = append(oldValue, newValue...)
