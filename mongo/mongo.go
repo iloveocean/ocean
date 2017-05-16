@@ -28,13 +28,11 @@ var mgr = sessionMgr{}
 
 func (m *sessionMgr) addSession(name string, s mongoSession) {
 	m.locker.Lock()
-	fmt.Println("enter add seesion, name is: ", name)
 	defer m.locker.Unlock()
 	if m.pool == nil {
 		m.pool = make(map[string]mongoSession)
 	}
 	m.pool[name] = s
-	fmt.Printf("session %s added into pool", name)
 }
 
 func (m *sessionMgr) getSession(name string) (mongoSession, error) {
@@ -102,7 +100,6 @@ func (m *sessionMgr) closeAllSessions() {
 
 func StartUp(sessionName, hosts, dbName, userName, password string) error {
 	if _, err := mgr.getSession(sessionName); err == nil {
-		fmt.Println("session is existing: ", sessionName)
 		return nil
 	}
 	multiHosts := strings.Split(hosts, ",")
@@ -121,7 +118,6 @@ func Shutdown() {
 }
 
 func CopySession(sessionName string) (*mgo.Session, error) {
-	fmt.Println("session name is: ", sessionName)
 	if session, err := mgr.fetchMgoSession(sessionName, true); err != nil {
 		return nil, err
 	} else {
