@@ -76,6 +76,8 @@ func (m Map) MSlice(key string, value interface{}) {
 		if oldIsSlice, oldValue := isSlice(old); oldIsSlice {
 			if newIsSlice, newValue := isSlice(value); newIsSlice {
 				m[key] = append(oldValue, newValue...)
+			} else {
+				m[key] = append(oldValue, value)
 			}
 		} else {
 			if newIsSlice, newValue := isSlice(value); newIsSlice {
@@ -141,6 +143,8 @@ func (m Map) handleWithOperator(key string, newOne interface{}, op Operator) {
 		} else if oldIsSlice, oldValue := isSlice(old); oldIsSlice {
 			if newIsSlice, newValue := isSlice(newOne); newIsSlice {
 				m[key] = append(oldValue, newValue...)
+			} else {
+				m[key] = append(oldValue, newOne)
 			}
 		}
 	} else {

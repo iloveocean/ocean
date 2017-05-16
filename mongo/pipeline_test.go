@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"encoding/json"
 	"testing"
 
 	"gopkg.in/mgo.v2/bson"
@@ -196,6 +197,66 @@ func testLimitHandler(t *testing.T) {
 		if len(results) != 10 {
 			t.Errorf("got %d results, expected %d", len(results), 10)
 			return
+		}
+	}
+}
+
+func TestProject(t *testing.T) {
+	commonHandlers := oceanTest.New(openDBHandler)
+	h := commonHandlers.ThenFunc(testProjectHandler)
+	h.RunTest(t)
+}
+
+func testProjectHandler(t *testing.T) {
+	if preError != nil {
+		t.Errorf("Error occured in the previous step")
+		return
+	}
+
+	//get pipe
+	o := NewOrm()
+	pipe := o.Pipe(new(order4Test))
+
+	//construct query conditions(s)
+	orderCond := M("company_id", bson.ObjectIdHex("56a09438e44c36717f7b0d86")).
+		M("created_at", 1460795178, GTE).
+		M("customer_name", "", NotEqual).
+		M("director.realname", "", NotEqual)
+
+	keepFields := []string{"_id", "status", "created_at", "customer_name"}
+
+	//take action
+
+	type projResult struct {
+		Id           bson.ObjectId `bson:"_id" json:"id"`                     //执行者ID
+		CustomerName string        `bson:"customer_name" json:"customerName"` //客户名称
+		DirectorName string        `bson:"director_name" json:"directorName"` //执行总监名字
+		CreatedAt    int64         `bson:"created_at" json:"createdAt"`       //创建时间
+		Status       int           `bson:"status" json:"status"`              //当前状态
+	}
+
+	pipe.Do(Match, orderCond)
+	pipe.Project(keepFields, M("director_name", "$director.realname"))
+
+	var docRaw []byte
+	results := []*projResult{}
+	if err := pipe.All(&results); err != nil {
+		t.Error("query db meet error: ", err.Error())
+		return
+	} else {
+		docRaw, err = json.MarshalIndent(results, "", " ")
+		for _, item := range results {
+			if len(item.Id.Hex()) == 0 ||
+				len(item.CustomerName) == 0 ||
+				len(item.DirectorName) == 0 ||
+				item.CreatedAt == 0 || item.Status == 0 {
+				if err != nil {
+					t.Error("json marshal error: ")
+				} else {
+					t.Error(string(docRaw))
+				}
+				return
+			}
 		}
 	}
 }
