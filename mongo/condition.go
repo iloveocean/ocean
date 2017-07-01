@@ -27,3 +27,10 @@ func (c *Condition) addCond(key string, value interface{}, opt Operator) *Condit
 	}
 	return c
 }
+
+func (c *Condition) mergeCond(newConds *Condition) *Condition {
+	for k, v := range newConds.conditions {
+		c.conditions[k] = v
+	}
+	return c
+}
